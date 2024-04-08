@@ -1,0 +1,53 @@
+version: "3.8"
+
+services:
+  
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+    - 8080:8080
+    volumes: 
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+  
+  backend:
+    container_name: backend
+    ports:
+      - 8000:5000
+    build: ./backend
+    volumes:
+      - ./backend:/backend
+    depends_on:
+      - db
+
+
+  db:
+    container_name: db
+    image: postgres:alpine3.19
+    ports:
+      - 5434:5432
+    volumes:
+      - ./docker/postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: banco_de_dados
+      POSTGRES_PASSWORD: 123456
+    restart: unless-stopped
+    
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    ports:
+    - 9090:9090
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+    - cadvisor
+  
+  
