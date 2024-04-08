@@ -17,12 +17,11 @@ def user_add():
         return jsonify({"error":True, "message": "O email não foi informado."}), 400
     if "password" not in data or data["password"] is None:
         return jsonify({"error":True, "message": "A senha não foi informada."}), 400
-    if "role_id" not in data or data["role_id"] is None:
-        data["role_id"]=2
     
-    hash_senha = generate_password_hash(data["password"], method='sha256')
     
-    user = User(email=data["email"], password=hash_senha, role_id=data["role_id"])
+    hash_senha = generate_password_hash(data["password"], method='pbkdf2:sha256')
+    
+    user = User(email=data["email"], password=hash_senha)
 
     try:
         db.session.add(user)
@@ -75,8 +74,7 @@ def user_edit(id):
         if "password" in data:
             user.password = generate_password_hash(data["password"], method='sha256')
         
-        if "role_id" in data:
-            user.role_id = data["role_id"]
+        
         
         db.session.commit()
         return jsonify({"error": False, "message": "Usuário editado com sucesso."})
